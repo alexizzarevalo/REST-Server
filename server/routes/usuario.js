@@ -3,8 +3,9 @@ const router = Router()
 const User = require('../models/Usuario')
 const bcrypt = require('bcrypt')
 const _ = require('underscore')
+const { verificaToken, verificaAdmin } = require('../middlewares/autenticacion')
 
-router.get('/usuario', (req, res) => {
+router.get('/usuario', verificaToken, (req, res) => {
     let desde = req.query.desde || 0
     desde = Number(desde)
 
@@ -29,7 +30,7 @@ router.get('/usuario', (req, res) => {
         })
 })
 
-router.post('/usuario', (req, res) => {
+router.post('/usuario', verificaToken, verificaAdmin, (req, res) => {
     let body = req.body
     let user = new User({
         nombre: body.nombre,
@@ -47,7 +48,7 @@ router.post('/usuario', (req, res) => {
     })
 })
 
-router.delete('/usuario/:id', (req, res) => {
+router.delete('/usuario/:id', verificaToken, verificaAdmin, (req, res) => {
     let id = req.params.id
     User.findByIdAndUpdate(id, { estado: false }, { new: true }, (err, doc) => {
         if (err)
@@ -56,13 +57,13 @@ router.delete('/usuario/:id', (req, res) => {
     })
 })
 
-router.put('/usuario/:id', (req, res) => {
+router.put('/usuario/:id', verificaToken,verificaAdmin, (req, res) => {
     let id = req.params.id
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'rol', 'estado'])
     User.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (err, doc) => {
         if (err)
             return res.status(400).json({ ok: false, err })
-        res.json({ok: true, usuario: doc})
+        res.json({ ok: true, usuario: doc })
     })
 })
 
